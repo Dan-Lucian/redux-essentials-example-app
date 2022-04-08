@@ -4,9 +4,12 @@ import './index.css';
 import { Provider } from 'react-redux';
 import App from './App';
 import store from './app/store';
+import { fetchUsers } from './features/users/usersSlice';
 
 import { worker } from './api/server';
 // Wrap app rendering so we can wait for the mock API to initialize
+
+store.dispatch(fetchUsers());
 
 async function start() {
   // Start our mock API server

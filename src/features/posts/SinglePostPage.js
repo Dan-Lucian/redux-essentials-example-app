@@ -2,6 +2,9 @@
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
+// selector function
+import { selectPostById } from './postsSlice';
+
 // components
 import PostAuthor from './PostAuthor';
 import TimeAgo from './TimeAgo';
@@ -9,9 +12,7 @@ import TimeAgo from './TimeAgo';
 const SinglePostPage = ({ match }) => {
   const { postId } = match.params;
 
-  const post = useSelector((state) =>
-    state.posts.find((post) => post.id === postId)
-  );
+  const post = useSelector((state) => selectPostById(state, postId));
 
   if (!post) {
     return (

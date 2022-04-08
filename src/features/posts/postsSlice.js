@@ -1,34 +1,11 @@
-import { createSlice, nanoid } from '@reduxjs/toolkit';
-import { sub } from 'date-fns';
+import { createSlice, nanoid, createAsyncThunk } from '@reduxjs/toolkit';
+import { client } from '../../api/client';
 
-const initialState = [
-  {
-    id: '1',
-    title: 'First post!',
-    content: 'Welcome to the first post',
-    date: sub(new Date(), { minutes: 10 }).toISOString(),
-    reactions: {
-      thumbsUp: 0,
-      hooray: 0,
-      heart: 0,
-      rocket: 0,
-      eyes: 0,
-    },
-  },
-  {
-    id: '2',
-    title: 'Second post!',
-    content: 'Welcome to the second post',
-    date: sub(new Date(), { minutes: 5 }).toISOString(),
-    reactions: {
-      thumbsUp: 0,
-      hooray: 0,
-      heart: 0,
-      rocket: 0,
-      eyes: 0,
-    },
-  },
-];
+const initialState = {
+  posts: [],
+  status: 'idle',
+  error: null,
+};
 
 const postsSlice = createSlice({
   name: 'posts',
@@ -36,7 +13,7 @@ const postsSlice = createSlice({
   reducers: {
     addPost: {
       reducer: (state, action) => {
-        state.push(action.payload);
+        state.posts.push(action.payload);
       },
       prepare: (title, content, userId) => ({
         payload: {
@@ -50,7 +27,7 @@ const postsSlice = createSlice({
     },
     updatePost: (state, action) => {
       const { id, title, content } = action.payload;
-      const foundPost = state.find((post) => post.id === id);
+      const foundPost = state.posts.find((post) => post.id === id);
       if (foundPost) {
         foundPost.title = title;
         foundPost.content = content;
@@ -64,7 +41,40 @@ const postsSlice = createSlice({
       }
     },
   },
+  extraReducers(builder) {
+    builder
+      .addCase(fetchPosts.pending, (state, action) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchPosts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.posts = state.posts.concat(action.payload);
+      })
+      .addCase(fetchPosts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+      .addCase(addNewPost.fulfilled, (state, action) => {
+        state.posts.push(action.payload);
+      });
+  },
 });
 
-export const { addPost, updatePost, addReaction } = postsSlice.actions;
+const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
+  const response = await client.get('/fakeApi/posts');
+  return response.data;
+});
+
+const addNewPost = createAsyncThunk('posts/addNewPost', async (state) => {
+  const response = await client.post('/fakeApi/posts', state);
+  return response.data;
+});
+
+const selectAllPosts = (state) => state.posts.posts;
+const selectPostById = (state, postId) =>
+  state.posts.posts.find((post) => post.id === postId);
+
 export default postsSlice.reducer;
+export { fetchPosts, addNewPost };
+export { selectAllPosts, selectPostById };
+export const { addPost, updatePost, addReaction } = postsSlice.actions;
