@@ -3,7 +3,7 @@ import { client } from '../../api/client';
 
 const initialState = [];
 
-export const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
+const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
   const response = await client.get('/fakeApi/users');
   return response.data;
 });
@@ -18,3 +18,4 @@ const usersSlice = createSlice({
 });
 
 export default usersSlice.reducer;
+export { fetchUsers };
